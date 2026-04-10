@@ -42,7 +42,7 @@ export default async function HomePage() {
       <section className="max-w-7xl mx-auto w-full px-4 pt-6 pb-2 sm:pt-12 sm:pb-4">
         <h2 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2">
           <span className="bg-gradient-to-r from-[#5B392D] via-[#D5A891] to-[#FDE5D9] bg-clip-text text-transparent">
-            Aulas Exclusivas
+            Aulas Exclusivas Para Embaixadores!
           </span>
         </h2>
         <p className="text-muted text-sm sm:text-lg">
