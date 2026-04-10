@@ -25,9 +25,9 @@ export default async function HomePage() {
           <Image
             src="/logo-horizontal.png"
             alt="Med Review"
-            width={300}
-            height={100}
-            className="h-12 sm:h-16 w-auto mix-blend-screen"
+            width={500}
+            height={160}
+            className="h-20 sm:h-28 w-auto mix-blend-screen"
           />
           <Link
             href="/auth/login"
