@@ -42,7 +42,7 @@ export default function LoginPage() {
             alt="Med Review"
             width={100}
             height={100}
-            className="h-20 w-auto"
+            className="h-20 w-auto mix-blend-screen"
           />
         </div>
         <h1 className="text-2xl font-bold text-center mb-1">Entrar</h1>

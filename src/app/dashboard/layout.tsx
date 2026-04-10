@@ -31,7 +31,7 @@ export default async function DashboardLayout({
             alt="Med Review"
             width={120}
             height={120}
-            className="h-16 w-auto mb-6 mx-auto"
+            className="h-16 w-auto mb-6 mx-auto mix-blend-screen"
           />
         </Link>
         <nav className="flex flex-col gap-1 flex-1">

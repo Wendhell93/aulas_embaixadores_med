@@ -27,7 +27,7 @@ export default async function HomePage() {
             alt="Med Review"
             width={180}
             height={60}
-            className="h-10 w-auto"
+            className="h-10 w-auto mix-blend-screen"
           />
           <Link
             href="/auth/login"
@@ -73,7 +73,7 @@ export default async function HomePage() {
             alt="Med Review"
             width={120}
             height={40}
-            className="h-7 w-auto opacity-60"
+            className="h-7 w-auto opacity-60 mix-blend-screen"
           />
           <p className="text-muted text-xs">
             Med Review - Todos os direitos reservados
