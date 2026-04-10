@@ -38,25 +38,21 @@ export default function ProfessorCard({ classData }: ProfessorCardProps) {
     window.open(url, '_blank');
   }
 
-  const displayTitle = classData.subtema
-    ? `${classData.grande_tema} - ${classData.subtema}`
-    : classData.grande_tema;
-
   return (
     <>
-      <div className="rounded-2xl bg-card border border-border overflow-hidden flex flex-col">
+      <div className="rounded-2xl bg-card border border-border overflow-hidden flex flex-col hover:border-primary/30 transition-colors">
         {/* Thumbnail */}
-        <div className="relative h-48 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
+        <div className="relative h-48 bg-gradient-to-br from-[#090413] to-[#262033] overflow-hidden">
           {classData.thumbnail_url ? (
             <img
               src={classData.thumbnail_url}
-              alt={displayTitle}
+              alt={classData.grande_tema}
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="flex items-center justify-center h-full">
-              <span className="text-2xl font-bold text-white/30 text-center px-4">
-                {classData.grande_tema.toUpperCase()}
+            <div className="flex items-center justify-center h-full bg-gradient-to-br from-[#090413] to-[#262033]">
+              <span className="text-2xl font-bold text-primary/40 text-center px-4 uppercase tracking-wider">
+                {classData.grande_tema}
               </span>
             </div>
           )}
@@ -64,29 +60,29 @@ export default function ProfessorCard({ classData }: ProfessorCardProps) {
 
         {/* Professor info */}
         <div className="p-4 flex-1 flex flex-col">
-          <div className="flex items-start gap-3 mb-3">
+          <div className="flex items-start gap-3 mb-4">
             {professor.photo_url ? (
               <img
                 src={professor.photo_url}
                 alt={professor.name}
-                className="w-12 h-12 rounded-full object-cover border-2 border-border flex-shrink-0"
+                className="w-12 h-12 rounded-full object-cover border-2 border-primary/30 flex-shrink-0"
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0 border-2 border-border">
-                <span className="text-lg font-bold text-white/50">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#5B392D] to-[#D5A891] flex items-center justify-center flex-shrink-0">
+                <span className="text-lg font-bold text-white">
                   {professor.name.charAt(0)}
                 </span>
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-xs font-bold text-muted uppercase tracking-wider">
+              <p className="text-xs font-semibold text-primary uppercase tracking-wider">
                 {professor.grande_area}
               </p>
               <p className="text-sm font-bold uppercase truncate">
                 {classData.grande_tema}
               </p>
               {classData.subtema && (
-                <p className="text-sm font-bold uppercase truncate">
+                <p className="text-sm font-bold uppercase truncate text-gold">
                   {classData.subtema}
                 </p>
               )}
@@ -98,7 +94,7 @@ export default function ProfessorCard({ classData }: ProfessorCardProps) {
           <div className="mt-auto space-y-2">
             <button
               onClick={() => setShowDates(true)}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-accent/10 border border-accent/30 px-4 py-2.5 text-sm font-bold text-accent hover:bg-accent/20 transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-lg border border-primary/30 px-4 py-2.5 text-sm font-bold text-primary hover:bg-primary/10 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -107,7 +103,7 @@ export default function ProfessorCard({ classData }: ProfessorCardProps) {
             </button>
             <button
               onClick={handleMarcarAula}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white hover:bg-primary-hover transition-colors"
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#5B392D] to-[#D5A891] px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition-opacity"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none"/>
@@ -120,7 +116,7 @@ export default function ProfessorCard({ classData }: ProfessorCardProps) {
 
       <AvailableDatesModal
         classId={classData.id}
-        className={displayTitle}
+        className={classData.subtema ? `${classData.grande_tema} - ${classData.subtema}` : classData.grande_tema}
         isOpen={showDates}
         onClose={() => setShowDates(false)}
         onSelectSlot={handleSelectSlot}

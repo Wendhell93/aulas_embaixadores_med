@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server';
 import ProfessorCard from '@/components/ProfessorCard';
 import type { ClassWithProfessor } from '@/types/database';
 import Link from 'next/link';
+import Image from 'next/image';
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 60;
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -21,27 +22,39 @@ export default async function HomePage() {
       {/* Header */}
       <header className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Galt</h1>
+          <Image
+            src="/logo-horizontal.png"
+            alt="Med Review"
+            width={180}
+            height={60}
+            className="h-10 w-auto"
+          />
           <Link
             href="/auth/login"
-            className="text-sm text-muted hover:text-foreground transition-colors"
+            className="text-sm text-muted hover:text-primary transition-colors"
           >
-            Área do Professor
+            Area do Professor
           </Link>
         </div>
       </header>
 
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-2">Aulas Exclusivas</h2>
-        <p className="text-muted text-lg mb-8">
-          Escolha um tema e marque sua aula com nossos professores
-        </p>
+        <div className="mb-8">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-2">
+            <span className="bg-gradient-to-r from-[#5B392D] via-[#D5A891] to-[#FDE5D9] bg-clip-text text-transparent">
+              Aulas Exclusivas
+            </span>
+          </h2>
+          <p className="text-muted text-lg">
+            Escolha um tema e marque sua aula com nossos professores
+          </p>
+        </div>
 
         {/* Grid */}
         {activeClasses.length === 0 ? (
           <div className="rounded-2xl bg-card border border-border p-12 text-center">
-            <p className="text-muted text-lg">Nenhuma aula disponível no momento.</p>
+            <p className="text-muted text-lg">Nenhuma aula disponivel no momento.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -51,6 +64,22 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+          <Image
+            src="/logo-horizontal.png"
+            alt="Med Review"
+            width={120}
+            height={40}
+            className="h-7 w-auto opacity-60"
+          />
+          <p className="text-muted text-xs">
+            Med Review - Todos os direitos reservados
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

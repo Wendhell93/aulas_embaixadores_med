@@ -4,15 +4,19 @@
   --color-background: #0a0a0a;
   --color-foreground: #ededed;
   --color-card: #1a1a1a;
-  --color-card-hover: #222222;
+  --color-card-hover: #252525;
   --color-border: #2a2a2a;
-  --color-primary: #22c55e;
-  --color-primary-hover: #16a34a;
-  --color-accent: #3b82f6;
-  --color-accent-hover: #2563eb;
-  --color-muted: #a1a1aa;
+  --color-primary: #D5A891;
+  --color-primary-hover: #C49580;
+  --color-accent: #9015F0;
+  --color-accent-hover: #6415F0;
+  --color-secondary: #046BD2;
+  --color-secondary-hover: #045CB4;
+  --color-cyan: #00B6F1;
+  --color-gold: #DBAD6B;
+  --color-muted: #999999;
   --color-danger: #ef4444;
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-exo2);
   --font-mono: var(--font-geist-mono);
 }
 

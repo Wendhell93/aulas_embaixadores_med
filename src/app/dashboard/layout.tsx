@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default async function DashboardLayout({
   children,
@@ -14,7 +15,6 @@ export default async function DashboardLayout({
     redirect('/auth/login');
   }
 
-  // Check if professor profile exists
   const { data: professor } = await supabase
     .from('professors')
     .select('id, name')
@@ -25,24 +25,32 @@ export default async function DashboardLayout({
     <div className="min-h-screen flex">
       {/* Sidebar */}
       <aside className="w-64 bg-card border-r border-border p-6 flex flex-col">
-        <h2 className="text-xl font-bold mb-8">Galt</h2>
-        <nav className="flex flex-col gap-2 flex-1">
+        <Link href="/">
+          <Image
+            src="/logo.png"
+            alt="Med Review"
+            width={120}
+            height={120}
+            className="h-16 w-auto mb-6 mx-auto"
+          />
+        </Link>
+        <nav className="flex flex-col gap-1 flex-1">
           <Link
             href="/dashboard"
-            className="px-4 py-2 rounded-lg hover:bg-card-hover transition-colors text-sm"
+            className="px-4 py-2.5 rounded-lg hover:bg-card-hover transition-colors text-sm font-medium"
           >
-            Visão Geral
+            Visao Geral
           </Link>
           <Link
             href="/dashboard/profile"
-            className="px-4 py-2 rounded-lg hover:bg-card-hover transition-colors text-sm"
+            className="px-4 py-2.5 rounded-lg hover:bg-card-hover transition-colors text-sm font-medium"
           >
             Meu Perfil
           </Link>
           {professor && (
             <Link
               href="/dashboard/classes"
-              className="px-4 py-2 rounded-lg hover:bg-card-hover transition-colors text-sm"
+              className="px-4 py-2.5 rounded-lg hover:bg-card-hover transition-colors text-sm font-medium"
             >
               Minhas Aulas
             </Link>
@@ -66,13 +74,13 @@ export default async function DashboardLayout({
       {/* Main content */}
       <main className="flex-1 p-8">
         {!professor && (
-          <div className="mb-6 rounded-lg bg-accent/10 border border-accent/30 p-4">
+          <div className="mb-6 rounded-lg bg-primary/10 border border-primary/30 p-4">
             <p className="text-sm">
               Complete seu{' '}
-              <Link href="/dashboard/profile" className="text-accent font-medium hover:underline">
+              <Link href="/dashboard/profile" className="text-primary font-medium hover:underline">
                 perfil de professor
               </Link>{' '}
-              para começar a cadastrar aulas.
+              para comecar a cadastrar aulas.
             </p>
           </div>
         )}
