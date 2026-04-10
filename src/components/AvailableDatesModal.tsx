@@ -1,0 +1,99 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import type { ClassSlot } from '@/types/database';
+
+interface AvailableDatesModalProps {
+  classId: string;
+  className: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onSelectSlot?: (slot: ClassSlot) => void;
+}
+
+export default function AvailableDatesModal({
+  classId,
+  className,
+  isOpen,
+  onClose,
+  onSelectSlot,
+}: AvailableDatesModalProps) {
+  const [slots, setSlots] = useState<ClassSlot[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true);
+      fetch(`/api/slots/${classId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setSlots(data);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
+  }, [isOpen, classId]);
+
+  if (!isOpen) return null;
+
+  // Group slots by date
+  const groupedSlots: Record<string, ClassSlot[]> = {};
+  slots.forEach((slot) => {
+    if (!groupedSlots[slot.date]) {
+      groupedSlots[slot.date] = [];
+    }
+    groupedSlots[slot.date].push(slot);
+  });
+
+  function formatDate(dateStr: string) {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  function formatTime(time: string) {
+    return time.slice(0, 5);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl bg-card border border-border p-6 max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold">{className}</h2>
+          <button
+            onClick={onClose}
+            className="text-muted hover:text-foreground text-xl leading-none"
+          >
+            &times;
+          </button>
+        </div>
+
+        <h3 className="text-sm font-medium text-muted mb-3">Datas e Horários Disponíveis</h3>
+
+        {loading ? (
+          <p className="text-muted text-sm">Carregando...</p>
+        ) : Object.keys(groupedSlots).length === 0 ? (
+          <p className="text-muted text-sm">Nenhum horário disponível no momento.</p>
+        ) : (
+          <div className="space-y-4">
+            {Object.entries(groupedSlots).map(([date, dateSlots]) => (
+              <div key={date}>
+                <p className="text-sm font-semibold mb-2">{formatDate(date)}</p>
+                <div className="flex flex-wrap gap-2">
+                  {dateSlots.map((slot) => (
+                    <button
+                      key={slot.id}
+                      onClick={() => onSelectSlot?.(slot)}
+                      className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors"
+                    >
+                      {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
