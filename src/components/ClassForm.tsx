@@ -194,13 +194,14 @@ export default function ClassForm({ classData, existingSlots }: ClassFormProps) 
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-5">
       {/* Thumbnail */}
       <div>
-        <label className="block text-sm font-medium mb-2">Imagem de Capa</label>
+        <label className="block text-sm font-medium mb-1">Imagem de Capa</label>
+        <p className="text-xs text-muted mb-2">Recomendado: 1080x1080px (quadrada) ou 1080x608px (16:9). Max 2MB.</p>
         <div className="flex items-start gap-4">
           {thumbnailPreview && (
             <img
               src={thumbnailPreview}
               alt="Preview"
-              className="w-32 h-20 rounded-lg object-cover border border-border"
+              className="w-32 h-32 sm:w-32 sm:h-20 rounded-lg object-cover border border-border"
             />
           )}
           <label className="cursor-pointer rounded-lg bg-card border border-border px-4 py-2 text-sm hover:bg-card-hover transition-colors">
