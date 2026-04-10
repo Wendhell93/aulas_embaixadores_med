@@ -13,16 +13,19 @@ export interface Database {
         Row: {
           id: string;
           email: string;
+          role: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           email: string;
+          role?: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           email?: string;
+          role?: string;
           created_at?: string;
         };
         Relationships: [];

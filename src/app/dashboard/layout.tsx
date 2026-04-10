@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getCurrentUserRole, isAdmin } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,6 +15,8 @@ export default async function DashboardLayout({
   if (!user) {
     redirect('/auth/login');
   }
+
+  const { role } = await getCurrentUserRole(supabase);
 
   const { data: professor } = await supabase
     .from('professors')
@@ -55,16 +58,29 @@ export default async function DashboardLayout({
               Minhas Aulas
             </Link>
           )}
+          {isAdmin(role) && (
+            <>
+              <div className="border-t border-border my-2" />
+              <Link
+                href="/admin"
+                className="px-4 py-2.5 rounded-lg hover:bg-card-hover transition-colors text-sm font-medium text-accent"
+              >
+                Painel Admin
+              </Link>
+            </>
+          )}
         </nav>
         <div className="border-t border-border pt-4 mt-4">
-          <p className="text-muted text-xs truncate mb-2">
+          <p className="text-muted text-xs truncate mb-1">
             {professor?.name || user.email}
           </p>
+          {isAdmin(role) && (
+            <span className="inline-block text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full mb-2">
+              ADMIN
+            </span>
+          )}
           <form action="/api/auth/logout" method="POST">
-            <button
-              type="submit"
-              className="text-danger text-sm hover:underline"
-            >
+            <button type="submit" className="text-danger text-sm hover:underline">
               Sair
             </button>
           </form>

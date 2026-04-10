@@ -13,7 +13,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({ request });
@@ -29,15 +29,32 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect dashboard routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+  const pathname = request.nextUrl.pathname;
+
+  // Protect dashboard and admin routes
+  if ((pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);
   }
 
+  // Admin routes: check role
+  if (pathname.startsWith('/admin') && user) {
+    const { data: authorized } = await supabase
+      .from('authorized_emails')
+      .select('role')
+      .eq('email', user.email?.toLowerCase() || '')
+      .single();
+
+    if (!authorized || authorized.role !== 'admin') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Redirect authenticated users away from auth pages
-  if (request.nextUrl.pathname.startsWith('/auth') && user) {
+  if (pathname.startsWith('/auth') && user) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
@@ -47,5 +64,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/auth/:path*'],
+  matcher: ['/dashboard/:path*', '/auth/:path*', '/admin/:path*'],
 };
