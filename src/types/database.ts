@@ -154,3 +154,8 @@ export type ClassSlot = Database['public']['Tables']['class_slots']['Row'];
 export type ClassWithProfessor = Class & {
   professors: Professor;
 };
+
+export type ClassWithProfessorAndSlots = Class & {
+  professors: Professor;
+  class_slots: ClassSlot[];
+};

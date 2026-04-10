@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
-import ProfessorCard from '@/components/ProfessorCard';
-import type { ClassWithProfessor } from '@/types/database';
+import HomeContent from '@/components/HomeContent';
+import type { ClassWithProfessorAndSlots } from '@/types/database';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -11,11 +11,11 @@ export default async function HomePage() {
 
   const { data: classes } = await supabase
     .from('classes')
-    .select('*, professors(*)')
+    .select('*, professors(*), class_slots(*)')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
-  const activeClasses = (classes || []) as ClassWithProfessor[];
+  const activeClasses = (classes || []) as ClassWithProfessorAndSlots[];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -39,7 +39,7 @@ export default async function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-7xl mx-auto w-full px-4 pt-6 pb-4 sm:pt-12 sm:pb-8">
+      <section className="max-w-7xl mx-auto w-full px-4 pt-6 pb-2 sm:pt-12 sm:pb-4">
         <h2 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2">
           <span className="bg-gradient-to-r from-[#5B392D] via-[#D5A891] to-[#FDE5D9] bg-clip-text text-transparent">
             Aulas Exclusivas
@@ -50,19 +50,9 @@ export default async function HomePage() {
         </p>
       </section>
 
-      {/* Grid - 1 col mobile, 2 tablet, 3 desktop */}
-      <section className="max-w-7xl mx-auto w-full px-4 pb-8 flex-1">
-        {activeClasses.length === 0 ? (
-          <div className="rounded-2xl bg-card border border-border p-8 sm:p-12 text-center">
-            <p className="text-muted text-base sm:text-lg">Nenhuma aula disponivel no momento.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {activeClasses.map((cls) => (
-              <ProfessorCard key={cls.id} classData={cls} />
-            ))}
-          </div>
-        )}
+      {/* Filters + Grid */}
+      <section className="max-w-7xl mx-auto w-full px-4 pt-4 pb-8 flex-1">
+        <HomeContent classes={activeClasses} />
       </section>
 
       {/* Footer */}
