@@ -26,10 +26,10 @@ export default async function AdminRankingPage() {
         </Link>
       </div>
       <p className="text-muted text-sm mb-4">
-        Ranking por score composto. Considera ultimos 90 dias.
+        Score composto: <strong>30%</strong> realizadas + <strong>25%</strong> disponibilidade + <strong>20%</strong> ocupacao + <strong>15%</strong> diversidade + <strong>10%</strong> variedade.
       </p>
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <div className="rounded-xl bg-card border border-border p-3">
           <p className="text-[10px] text-muted uppercase">Professores</p>
           <p className="text-xl font-bold">{scores.length}</p>
@@ -37,6 +37,10 @@ export default async function AdminRankingPage() {
         <div className="rounded-xl bg-card border border-border p-3">
           <p className="text-[10px] text-muted uppercase">Realizadas (total)</p>
           <p className="text-xl font-bold">{totalCompleted}</p>
+        </div>
+        <div className="rounded-xl bg-card border border-border p-3">
+          <p className="text-[10px] text-muted uppercase">Slots futuros</p>
+          <p className="text-xl font-bold">{scores.reduce((s, p) => s + p.totalFutureOffered, 0)}</p>
         </div>
         <div className="rounded-xl bg-card border border-border p-3">
           <p className="text-[10px] text-muted uppercase">Ocupacao media</p>
