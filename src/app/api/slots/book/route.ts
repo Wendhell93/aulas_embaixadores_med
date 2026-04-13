@@ -10,12 +10,12 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  // Marca slot como bookado apenas se ainda nao esta bookado (atomico via WHERE)
+  // Atomico: so atualiza se status='available'
   const { data, error } = await supabase
     .from('class_slots')
-    .update({ is_booked: true })
+    .update({ status: 'booked', status_changed_at: new Date().toISOString() })
     .eq('id', slotId)
-    .eq('is_booked', false)
+    .eq('status', 'available')
     .select()
     .single();
 

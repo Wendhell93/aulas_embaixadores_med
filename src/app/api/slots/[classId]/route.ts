@@ -12,7 +12,7 @@ export async function GET(
     .from('class_slots')
     .select('*')
     .eq('class_id', classId)
-    .eq('is_booked', false)
+    .eq('status', 'available')
     .gte('date', new Date().toISOString().split('T')[0])
     .order('date', { ascending: true })
     .order('start_time', { ascending: true });

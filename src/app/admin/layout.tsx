@@ -23,9 +23,11 @@ export default async function AdminLayout({
 
   const items = [
     { href: '/admin', label: 'Visao Geral' },
-    { href: '/admin/emails', label: 'Emails Autorizados' },
-    { href: '/admin/professors', label: 'Professores' },
+    { href: '/admin/ranking', label: 'Ranking' },
+    { href: '/admin/slots', label: 'Gerenciar Slots' },
     { href: '/admin/classes', label: 'Todas as Aulas' },
+    { href: '/admin/professors', label: 'Professores' },
+    { href: '/admin/emails', label: 'Emails Autorizados' },
     { href: '', label: '', divider: true },
     { href: '/dashboard', label: 'Dashboard Professor' },
   ];

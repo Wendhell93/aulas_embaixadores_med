@@ -112,6 +112,9 @@ export interface Database {
           start_time: string;
           end_time: string;
           is_booked: boolean;
+          status: string;
+          status_changed_at: string | null;
+          status_changed_by: string | null;
           created_at: string;
         };
         Insert: {
@@ -121,6 +124,9 @@ export interface Database {
           start_time: string;
           end_time: string;
           is_booked?: boolean;
+          status?: string;
+          status_changed_at?: string | null;
+          status_changed_by?: string | null;
           created_at?: string;
         };
         Update: {
@@ -130,6 +136,9 @@ export interface Database {
           start_time?: string;
           end_time?: string;
           is_booked?: boolean;
+          status?: string;
+          status_changed_at?: string | null;
+          status_changed_by?: string | null;
           created_at?: string;
         };
         Relationships: [
@@ -192,6 +201,32 @@ export type Professor = Database['public']['Tables']['professors']['Row'];
 export type Class = Database['public']['Tables']['classes']['Row'];
 export type ClassSlot = Database['public']['Tables']['class_slots']['Row'];
 export type ClassAvailability = Database['public']['Tables']['class_availability']['Row'];
+
+export type SlotStatus =
+  | 'available'
+  | 'booked'
+  | 'completed'
+  | 'cancelled_student'
+  | 'no_show'
+  | 'cancelled_professor';
+
+export const SLOT_STATUS_LABELS: Record<SlotStatus, string> = {
+  available: 'Disponivel',
+  booked: 'Reservada',
+  completed: 'Realizada',
+  cancelled_student: 'Cancel. aluno',
+  no_show: 'Faltou',
+  cancelled_professor: 'Cancel. professor',
+};
+
+export const SLOT_STATUS_COLORS: Record<SlotStatus, string> = {
+  available: 'bg-muted/20 text-muted',
+  booked: 'bg-accent/20 text-accent',
+  completed: 'bg-green-500/20 text-green-400',
+  cancelled_student: 'bg-yellow-500/20 text-yellow-400',
+  no_show: 'bg-orange-500/20 text-orange-400',
+  cancelled_professor: 'bg-danger/20 text-danger',
+};
 
 export type ClassWithProfessor = Class & {
   professors: Professor;

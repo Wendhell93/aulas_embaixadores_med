@@ -29,6 +29,7 @@ export default async function DashboardLayout({
     { href: '/dashboard/profile', label: 'Meu Perfil' },
     { href: '/dashboard/classes', label: 'Minhas Aulas', show: !!professor },
     { href: '/dashboard/bookings', label: 'Aulas Marcadas', show: !!professor },
+    { href: '/dashboard/ranking', label: 'Ranking' },
     { href: '', label: '', divider: true, show: isAdmin(role) },
     { href: '/admin', label: 'Painel Admin', show: isAdmin(role), accent: true },
   ];

@@ -2,14 +2,15 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import StatusBadge from '@/components/StatusBadge';
+import { type SlotStatus } from '@/types/database';
 
 interface BookedSlot {
   id: string;
   date: string;
   start_time: string;
   end_time: string;
-  is_booked: boolean;
+  status: SlotStatus;
   class_id: string;
   classes: {
     grande_tema: string;
@@ -20,6 +21,7 @@ interface BookedSlot {
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookedSlot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<'upcoming' | 'completed' | 'other'>('upcoming');
   const supabase = createClient();
 
   async function loadBookings() {
@@ -49,12 +51,13 @@ export default function BookingsPage() {
       return;
     }
 
+    // Buscar tudo exceto available
     const { data } = await supabase
       .from('class_slots')
       .select('*, classes(grande_tema, subtema)')
       .in('class_id', classIds)
-      .eq('is_booked', true)
-      .order('date', { ascending: true });
+      .neq('status', 'available')
+      .order('date', { ascending: false });
 
     setBookings((data as BookedSlot[]) || []);
     setLoading(false);
@@ -63,20 +66,6 @@ export default function BookingsPage() {
   useEffect(() => {
     loadBookings();
   }, []);
-
-  async function unbook(slotId: string) {
-    const { error } = await supabase
-      .from('class_slots')
-      .update({ is_booked: false })
-      .eq('id', slotId);
-
-    if (error) {
-      toast.error('Erro ao liberar: ' + error.message);
-      return;
-    }
-    toast.success('Horario liberado novamente');
-    loadBookings();
-  }
 
   function formatDate(dateStr: string) {
     const [y, m, d] = dateStr.split('-');
@@ -88,28 +77,54 @@ export default function BookingsPage() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const upcoming = bookings.filter(b => b.date >= today);
-  const past = bookings.filter(b => b.date < today);
+  const upcoming = bookings.filter(b => b.status === 'booked' && b.date >= today);
+  const completed = bookings.filter(b => b.status === 'completed');
+  const other = bookings.filter(
+    b => !(b.status === 'booked' && b.date >= today) && b.status !== 'completed'
+  );
+
+  const tabs = [
+    { id: 'upcoming' as const, label: 'Proximas', count: upcoming.length },
+    { id: 'completed' as const, label: 'Realizadas', count: completed.length },
+    { id: 'other' as const, label: 'Outras', count: other.length },
+  ];
+
+  const current = tab === 'upcoming' ? upcoming : tab === 'completed' ? completed : other;
 
   if (loading) return <div className="text-muted">Carregando...</div>;
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-2">Aulas Marcadas</h1>
-      <p className="text-muted text-sm mb-6">
-        Horarios que alunos reservaram. Se algum aluno desistiu, libere o slot para outros.
+      <p className="text-muted text-sm mb-4">
+        Horarios reservados. Status e controlado pela administracao apos a aula acontecer.
       </p>
 
-      {/* Upcoming */}
-      <h2 className="text-sm font-semibold text-primary mb-2">PROXIMAS</h2>
-      {upcoming.length === 0 ? (
-        <div className="rounded-2xl bg-card border border-border p-6 text-center mb-6">
-          <p className="text-muted text-sm">Nenhuma aula marcada.</p>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4 border-b border-border">
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`px-4 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+              tab === t.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted hover:text-foreground'
+            }`}
+          >
+            {t.label} ({t.count})
+          </button>
+        ))}
+      </div>
+
+      {current.length === 0 ? (
+        <div className="rounded-2xl bg-card border border-border p-6 text-center">
+          <p className="text-muted text-sm">Nenhuma aula nesta categoria.</p>
         </div>
       ) : (
-        <div className="space-y-2 mb-6">
-          {upcoming.map(b => (
-            <div key={b.id} className="rounded-xl bg-card border border-primary/30 p-4 flex items-center gap-3">
+        <div className="space-y-2">
+          {current.map(b => (
+            <div key={b.id} className="rounded-xl bg-card border border-border p-4 flex flex-col sm:flex-row sm:items-center gap-2">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold">
                   {b.classes.grande_tema}
@@ -119,35 +134,10 @@ export default function BookingsPage() {
                   {formatDate(b.date)} - {formatTime(b.start_time)} as {formatTime(b.end_time)}
                 </p>
               </div>
-              <button
-                onClick={() => unbook(b.id)}
-                className="text-xs px-3 py-1.5 rounded-lg border border-danger/30 text-danger hover:bg-danger/10 transition-colors flex-shrink-0"
-              >
-                Liberar
-              </button>
+              <StatusBadge status={b.status} size="sm" />
             </div>
           ))}
         </div>
-      )}
-
-      {/* Past */}
-      {past.length > 0 && (
-        <>
-          <h2 className="text-sm font-semibold text-muted mb-2">HISTORICO</h2>
-          <div className="space-y-2">
-            {past.map(b => (
-              <div key={b.id} className="rounded-xl bg-card border border-border p-4 opacity-60">
-                <p className="font-semibold text-sm">
-                  {b.classes.grande_tema}
-                  {b.classes.subtema && <span> - {b.classes.subtema}</span>}
-                </p>
-                <p className="text-xs text-muted">
-                  {formatDate(b.date)} - {formatTime(b.start_time)} as {formatTime(b.end_time)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </>
       )}
     </div>
   );
