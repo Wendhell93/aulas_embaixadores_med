@@ -10,14 +10,27 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  // Atomico: so atualiza se status='available'
-  const { data, error } = await supabase
+  // Tenta atualizar usando status (nova migration)
+  let { data, error } = await supabase
     .from('class_slots')
     .update({ status: 'booked', status_changed_at: new Date().toISOString() })
     .eq('id', slotId)
     .eq('status', 'available')
     .select()
     .single();
+
+  // Fallback para bancos sem a coluna status (usa is_booked)
+  if (error && error.message?.includes('column') && error.message?.includes('status')) {
+    const res = await supabase
+      .from('class_slots')
+      .update({ is_booked: true })
+      .eq('id', slotId)
+      .eq('is_booked', false)
+      .select()
+      .single();
+    data = res.data;
+    error = res.error;
+  }
 
   if (error || !data) {
     return NextResponse.json(

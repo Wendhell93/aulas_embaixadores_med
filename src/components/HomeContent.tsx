@@ -50,7 +50,7 @@ export default function HomeContent({ classes }: HomeContentProps) {
       // Available slots filter
       if (showAvailable) {
         const hasAvailable = cls.class_slots?.some(
-          (slot) => slot.date >= today && slot.status === 'available'
+          (slot) => slot.date >= today && (slot.status ? slot.status === 'available' : !slot.is_booked)
         );
         if (!hasAvailable) {
           return false;

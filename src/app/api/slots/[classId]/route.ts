@@ -8,7 +8,8 @@ export async function GET(
   const { classId } = await params;
   const supabase = await createClient();
 
-  const { data: slots, error } = await supabase
+  // Tenta primeiro com a coluna status (nova migration). Se falhar, fallback para is_booked.
+  let { data: slots, error } = await supabase
     .from('class_slots')
     .select('*')
     .eq('class_id', classId)
@@ -16,6 +17,20 @@ export async function GET(
     .gte('date', new Date().toISOString().split('T')[0])
     .order('date', { ascending: true })
     .order('start_time', { ascending: true });
+
+  // Fallback para bancos sem a coluna status
+  if (error && error.message?.includes('column') && error.message?.includes('status')) {
+    const res = await supabase
+      .from('class_slots')
+      .select('*')
+      .eq('class_id', classId)
+      .eq('is_booked', false)
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true })
+      .order('start_time', { ascending: true });
+    slots = res.data;
+    error = res.error;
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
