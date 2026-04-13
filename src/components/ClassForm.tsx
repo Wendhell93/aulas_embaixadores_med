@@ -2,35 +2,20 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import type { Class, ClassSlot } from '@/types/database';
-
-interface Slot {
-  id?: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-}
+import { useState } from 'react';
+import Link from 'next/link';
+import type { Class } from '@/types/database';
 
 interface ClassFormProps {
   classData?: Class;
-  existingSlots?: ClassSlot[];
 }
 
-export default function ClassForm({ classData, existingSlots }: ClassFormProps) {
+export default function ClassForm({ classData }: ClassFormProps) {
   const [grandeTema, setGrandeTema] = useState(classData?.grande_tema || '');
   const [subtema, setSubtema] = useState(classData?.subtema || '');
   const [thumbnailUrl, setThumbnailUrl] = useState(classData?.thumbnail_url || '');
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState(classData?.thumbnail_url || '');
-  const [slots, setSlots] = useState<Slot[]>(
-    existingSlots?.map((s) => ({
-      id: s.id,
-      date: s.date,
-      start_time: s.start_time,
-      end_time: s.end_time,
-    })) || [{ date: '', start_time: '', end_time: '' }]
-  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -40,26 +25,12 @@ export default function ClassForm({ classData, existingSlots }: ClassFormProps) 
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        setError('A imagem deve ter no máximo 2MB.');
+        setError('A imagem deve ter no maximo 2MB.');
         return;
       }
       setThumbnailFile(file);
       setThumbnailPreview(URL.createObjectURL(file));
     }
-  }
-
-  function addSlot() {
-    setSlots([...slots, { date: '', start_time: '', end_time: '' }]);
-  }
-
-  function removeSlot(index: number) {
-    setSlots(slots.filter((_, i) => i !== index));
-  }
-
-  function updateSlot(index: number, field: keyof Slot, value: string) {
-    const updated = [...slots];
-    updated[index] = { ...updated[index], [field]: value };
-    setSlots(updated);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -82,9 +53,9 @@ export default function ClassForm({ classData, existingSlots }: ClassFormProps) 
       return;
     }
 
+    const professorId = (professor as { id: string }).id;
     let finalThumbnailUrl = thumbnailUrl;
 
-    // Upload thumbnail if changed
     if (thumbnailFile) {
       const ext = thumbnailFile.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${ext}`;
@@ -104,11 +75,7 @@ export default function ClassForm({ classData, existingSlots }: ClassFormProps) 
       finalThumbnailUrl = publicUrl;
     }
 
-    // Valid slots (with all fields filled)
-    const validSlots = slots.filter((s) => s.date && s.start_time && s.end_time);
-
     if (classData) {
-      // Update class
       const { error: updateError } = await supabase
         .from('classes')
         .update({
@@ -123,38 +90,13 @@ export default function ClassForm({ classData, existingSlots }: ClassFormProps) 
         setLoading(false);
         return;
       }
-
-      // Delete old slots that were removed
-      const keepIds = validSlots.filter((s) => s.id).map((s) => s.id!);
-      if (existingSlots) {
-        const toDelete = existingSlots.filter((s) => !keepIds.includes(s.id));
-        for (const slot of toDelete) {
-          await supabase.from('class_slots').delete().eq('id', slot.id);
-        }
-      }
-
-      // Upsert slots
-      for (const slot of validSlots) {
-        if (slot.id) {
-          await supabase
-            .from('class_slots')
-            .update({ date: slot.date, start_time: slot.start_time, end_time: slot.end_time })
-            .eq('id', slot.id);
-        } else {
-          await supabase.from('class_slots').insert({
-            class_id: classData.id,
-            date: slot.date,
-            start_time: slot.start_time,
-            end_time: slot.end_time,
-          });
-        }
-      }
+      router.push('/dashboard/classes');
+      router.refresh();
     } else {
-      // Create class
       const { data: newClass, error: createError } = await supabase
         .from('classes')
         .insert({
-          professor_id: professor.id,
+          professor_id: professorId,
           grande_tema: grandeTema,
           subtema: subtema || null,
           thumbnail_url: finalThumbnailUrl || null,
@@ -168,26 +110,10 @@ export default function ClassForm({ classData, existingSlots }: ClassFormProps) 
         return;
       }
 
-      // Insert slots
-      if (validSlots.length > 0) {
-        const { error: slotError } = await supabase.from('class_slots').insert(
-          validSlots.map((s) => ({
-            class_id: newClass.id,
-            date: s.date,
-            start_time: s.start_time,
-            end_time: s.end_time,
-          }))
-        );
-        if (slotError) {
-          setError('Aula criada, mas erro ao adicionar horários: ' + slotError.message);
-          setLoading(false);
-          return;
-        }
-      }
+      // Redireciona para pagina de disponibilidade apos criar
+      router.push(`/dashboard/classes/${(newClass as { id: string }).id}/availability`);
+      router.refresh();
     }
-
-    router.push('/dashboard/classes');
-    router.refresh();
   }
 
   return (
@@ -247,53 +173,31 @@ export default function ClassForm({ classData, existingSlots }: ClassFormProps) 
         />
       </div>
 
-      {/* Slots */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium">Datas e Horários Disponíveis</label>
-          <button
-            type="button"
-            onClick={addSlot}
-            className="text-sm text-accent hover:underline"
+      {/* Link para gerenciar disponibilidade (apenas em edicao) */}
+      {classData && (
+        <div className="rounded-xl bg-primary/10 border border-primary/30 p-4">
+          <p className="text-sm mb-2">
+            <strong>Disponibilidade</strong>
+          </p>
+          <p className="text-xs text-muted mb-3">
+            Defina os dias da semana e horarios que voce pode dar esta aula em cada mes.
+          </p>
+          <Link
+            href={`/dashboard/classes/${classData.id}/availability`}
+            className="inline-block rounded-lg border border-primary/40 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10 transition-colors"
           >
-            + Adicionar Horário
-          </button>
+            Gerenciar Disponibilidade
+          </Link>
         </div>
-        <div className="space-y-2">
-          {slots.map((slot, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <input
-                type="date"
-                value={slot.date}
-                onChange={(e) => updateSlot(index, 'date', e.target.value)}
-                className="flex-1 rounded-lg bg-background border border-border px-3 py-2 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <input
-                type="time"
-                value={slot.start_time}
-                onChange={(e) => updateSlot(index, 'start_time', e.target.value)}
-                className="rounded-lg bg-background border border-border px-3 py-2 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <span className="text-muted text-sm">até</span>
-              <input
-                type="time"
-                value={slot.end_time}
-                onChange={(e) => updateSlot(index, 'end_time', e.target.value)}
-                className="rounded-lg bg-background border border-border px-3 py-2 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              {slots.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeSlot(index)}
-                  className="text-danger hover:underline text-sm px-2"
-                >
-                  X
-                </button>
-              )}
-            </div>
-          ))}
+      )}
+
+      {!classData && (
+        <div className="rounded-xl bg-muted/10 border border-border p-4">
+          <p className="text-xs text-muted">
+            Apos criar a aula, voce podera definir os dias e horarios disponiveis.
+          </p>
         </div>
-      </div>
+      )}
 
       {error && <p className="text-danger text-sm">{error}</p>}
 
@@ -301,9 +205,9 @@ export default function ClassForm({ classData, existingSlots }: ClassFormProps) 
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-primary px-6 py-2.5 font-semibold text-white hover:bg-primary-hover transition-colors disabled:opacity-50"
+          className="rounded-lg bg-gradient-to-r from-[#5B392D] to-[#D5A891] px-6 py-2.5 font-semibold text-white hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {loading ? 'Salvando...' : classData ? 'Salvar Alterações' : 'Criar Aula'}
+          {loading ? 'Salvando...' : classData ? 'Salvar Alteracoes' : 'Criar Aula'}
         </button>
         <button
           type="button"

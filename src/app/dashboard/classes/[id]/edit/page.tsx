@@ -4,13 +4,12 @@ import { createClient } from '@/lib/supabase/client';
 import ClassForm from '@/components/ClassForm';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import type { Class, ClassSlot } from '@/types/database';
+import type { Class } from '@/types/database';
 
 export default function EditClassPage() {
   const params = useParams();
   const classId = params.id as string;
   const [classData, setClassData] = useState<Class | null>(null);
-  const [slots, setSlots] = useState<ClassSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -22,26 +21,19 @@ export default function EditClassPage() {
         .eq('id', classId)
         .single();
 
-      const { data: classSlots } = await supabase
-        .from('class_slots')
-        .select('*')
-        .eq('class_id', classId)
-        .order('date', { ascending: true });
-
-      setClassData(cls);
-      setSlots(classSlots || []);
+      setClassData(cls as Class | null);
       setLoading(false);
     }
     load();
   }, [classId]);
 
   if (loading) return <div className="text-muted">Carregando...</div>;
-  if (!classData) return <div className="text-danger">Aula não encontrada.</div>;
+  if (!classData) return <div className="text-danger">Aula nao encontrada.</div>;
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Editar Aula</h1>
-      <ClassForm classData={classData} existingSlots={slots} />
+      <ClassForm classData={classData} />
     </div>
   );
 }

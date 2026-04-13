@@ -142,6 +142,44 @@ export interface Database {
           }
         ];
       };
+      class_availability: {
+        Row: {
+          id: string;
+          class_id: string;
+          month: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          class_id: string;
+          month: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          class_id?: string;
+          month?: string;
+          day_of_week?: number;
+          start_time?: string;
+          end_time?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "class_availability_class_id_fkey";
+            columns: ["class_id"];
+            isOneToOne: false;
+            referencedRelation: "classes";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -153,6 +191,7 @@ export interface Database {
 export type Professor = Database['public']['Tables']['professors']['Row'];
 export type Class = Database['public']['Tables']['classes']['Row'];
 export type ClassSlot = Database['public']['Tables']['class_slots']['Row'];
+export type ClassAvailability = Database['public']['Tables']['class_availability']['Row'];
 
 export type ClassWithProfessor = Class & {
   professors: Professor;

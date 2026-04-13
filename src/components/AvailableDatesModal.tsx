@@ -20,10 +20,13 @@ export default function AvailableDatesModal({
 }: AvailableDatesModalProps) {
   const [slots, setSlots] = useState<ClassSlot[]>([]);
   const [loading, setLoading] = useState(false);
+  const [booking, setBooking] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
+      setError('');
       fetch(`/api/slots/${classId}`)
         .then((res) => res.json())
         .then((data) => {
@@ -53,6 +56,36 @@ export default function AvailableDatesModal({
     return time.slice(0, 5);
   }
 
+  async function handleSlotClick(slot: ClassSlot) {
+    setError('');
+    setBooking(slot.id);
+
+    try {
+      const res = await fetch('/api/slots/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slotId: slot.id }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || 'Erro ao reservar horario');
+        setBooking(null);
+        // Remove da lista (alguem pegou primeiro)
+        setSlots(prev => prev.filter(s => s.id !== slot.id));
+        return;
+      }
+
+      // Sucesso: chama callback do pai (abre WhatsApp)
+      onSelectSlot?.(slot);
+      // Remove da lista local
+      setSlots(prev => prev.filter(s => s.id !== slot.id));
+    } catch {
+      setError('Erro de conexao. Tente novamente.');
+      setBooking(null);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="w-full max-w-md rounded-2xl bg-card border border-border p-6 max-h-[80vh] overflow-y-auto">
@@ -70,6 +103,12 @@ export default function AvailableDatesModal({
 
         <h3 className="text-sm font-medium text-muted mb-3">Datas e Horarios Disponiveis</h3>
 
+        {error && (
+          <p className="text-danger text-sm mb-3 rounded-lg bg-danger/10 border border-danger/30 px-3 py-2">
+            {error}
+          </p>
+        )}
+
         {loading ? (
           <p className="text-muted text-sm">Carregando...</p>
         ) : Object.keys(groupedSlots).length === 0 ? (
@@ -83,10 +122,11 @@ export default function AvailableDatesModal({
                   {dateSlots.map((slot) => (
                     <button
                       key={slot.id}
-                      onClick={() => onSelectSlot?.(slot)}
-                      className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-gradient-to-r hover:from-[#5B392D] hover:to-[#D5A891] hover:text-white hover:border-transparent transition-all"
+                      onClick={() => handleSlotClick(slot)}
+                      disabled={booking === slot.id}
+                      className="rounded-lg border border-border px-3 py-1.5 text-sm hover:bg-gradient-to-r hover:from-[#5B392D] hover:to-[#D5A891] hover:text-white hover:border-transparent transition-all disabled:opacity-50 disabled:cursor-wait"
                     >
-                      {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                      {booking === slot.id ? 'Reservando...' : `${formatTime(slot.start_time)} - ${formatTime(slot.end_time)}`}
                     </button>
                   ))}
                 </div>
