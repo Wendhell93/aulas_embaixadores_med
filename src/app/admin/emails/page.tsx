@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface AuthorizedEmail {
   id: string;
@@ -15,8 +17,7 @@ export default function AdminEmailsPage() {
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState('professor');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<AuthorizedEmail | null>(null);
   const supabase = createClient();
 
   async function loadEmails() {
@@ -34,11 +35,9 @@ export default function AdminEmailsPage() {
 
   async function addEmail(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setSuccess('');
 
     if (!newEmail.trim()) {
-      setError('Informe um email.');
+      toast.error('Informe um email');
       return;
     }
 
@@ -48,31 +47,46 @@ export default function AdminEmailsPage() {
 
     if (insertError) {
       if (insertError.message.includes('duplicate')) {
-        setError('Este email ja esta cadastrado.');
+        toast.error('Este email ja esta cadastrado');
       } else {
-        setError(insertError.message);
+        toast.error(insertError.message);
       }
       return;
     }
 
-    setSuccess(`${newEmail} adicionado como ${newRole}.`);
+    toast.success(`${newEmail} adicionado como ${newRole}`);
     setNewEmail('');
     loadEmails();
   }
 
-  async function removeEmail(id: string, email: string) {
-    if (!confirm(`Remover ${email} da lista de autorizados?`)) return;
+  async function confirmRemove() {
+    if (!deleteTarget) return;
+    const { error } = await supabase
+      .from('authorized_emails')
+      .delete()
+      .eq('id', deleteTarget.id);
 
-    await supabase.from('authorized_emails').delete().eq('id', id);
+    if (error) {
+      toast.error('Erro: ' + error.message);
+      return;
+    }
+    toast.success('Email removido');
+    setDeleteTarget(null);
     loadEmails();
   }
 
   async function toggleRole(id: string, currentRole: string) {
     const newR = currentRole === 'admin' ? 'professor' : 'admin';
-    await supabase
+    const { error } = await supabase
       .from('authorized_emails')
       .update({ role: newR })
       .eq('id', id);
+
+    if (error) {
+      toast.error('Erro: ' + error.message);
+      return;
+    }
+    toast.success(`Role alterada para ${newR}`);
     loadEmails();
   }
 
@@ -82,18 +96,17 @@ export default function AdminEmailsPage() {
     <div>
       <h1 className="text-2xl font-bold mb-6">Emails Autorizados</h1>
 
-      {/* Add email form */}
       <form onSubmit={addEmail} className="mb-6 flex flex-col sm:flex-row gap-2">
         <input
           type="email"
           value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
+          onChange={e => setNewEmail(e.target.value)}
           placeholder="email@exemplo.com"
           className="flex-1 rounded-lg bg-background border border-border px-4 py-2.5 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <select
           value={newRole}
-          onChange={(e) => setNewRole(e.target.value)}
+          onChange={e => setNewRole(e.target.value)}
           className="rounded-lg bg-background border border-border px-4 py-2.5 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="professor">Professor</option>
@@ -107,16 +120,9 @@ export default function AdminEmailsPage() {
         </button>
       </form>
 
-      {error && <p className="text-danger text-sm mb-4">{error}</p>}
-      {success && <p className="text-primary text-sm mb-4">{success}</p>}
-
-      {/* Emails list */}
       <div className="space-y-2">
-        {emails.map((item) => (
-          <div
-            key={item.id}
-            className="rounded-xl bg-card border border-border p-4 flex items-center justify-between gap-4"
-          >
+        {emails.map(item => (
+          <div key={item.id} className="rounded-xl bg-card border border-border p-4 flex items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{item.email}</p>
               <p className="text-xs text-muted">
@@ -127,15 +133,13 @@ export default function AdminEmailsPage() {
               <button
                 onClick={() => toggleRole(item.id, item.role)}
                 className={`text-xs px-3 py-1.5 rounded-full font-semibold transition-colors ${
-                  item.role === 'admin'
-                    ? 'bg-accent/20 text-accent'
-                    : 'bg-primary/20 text-primary'
+                  item.role === 'admin' ? 'bg-accent/20 text-accent' : 'bg-primary/20 text-primary'
                 }`}
               >
                 {item.role}
               </button>
               <button
-                onClick={() => removeEmail(item.id, item.email)}
+                onClick={() => setDeleteTarget(item)}
                 className="text-xs px-3 py-1.5 rounded-lg border border-danger/30 text-danger hover:bg-danger/10 transition-colors"
               >
                 Remover
@@ -148,6 +152,16 @@ export default function AdminEmailsPage() {
       {emails.length === 0 && (
         <p className="text-muted text-center py-8">Nenhum email cadastrado.</p>
       )}
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Remover email?"
+        message={`Remover ${deleteTarget?.email} da lista de autorizados? Esta pessoa nao podera mais se cadastrar.`}
+        confirmLabel="Remover"
+        danger
+        onConfirm={confirmRemove}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
+import StatCard from '@/components/StatCard';
+import Link from 'next/link';
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -20,27 +22,44 @@ export default async function AdminPage() {
     .select('*', { count: 'exact', head: true })
     .eq('is_active', true);
 
+  const { count: bookedCount } = await supabase
+    .from('class_slots')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_booked', true);
+
+  const { count: availableCount } = await supabase
+    .from('class_slots')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_booked', false)
+    .gte('date', new Date().toISOString().slice(0, 10));
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Painel Administrativo</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-2xl bg-card border border-border p-6">
-          <p className="text-muted text-sm">Emails Autorizados</p>
-          <p className="text-3xl font-bold mt-1">{emailCount || 0}</p>
-        </div>
-        <div className="rounded-2xl bg-card border border-border p-6">
-          <p className="text-muted text-sm">Professores Cadastrados</p>
-          <p className="text-3xl font-bold mt-1">{professorCount || 0}</p>
-        </div>
-        <div className="rounded-2xl bg-card border border-border p-6">
-          <p className="text-muted text-sm">Total de Aulas</p>
-          <p className="text-3xl font-bold mt-1">{classCount || 0}</p>
-        </div>
-        <div className="rounded-2xl bg-card border border-border p-6">
-          <p className="text-muted text-sm">Aulas Ativas</p>
-          <p className="text-3xl font-bold mt-1 text-primary">{activeClassCount || 0}</p>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-8">
+        <StatCard label="Emails Autorizados" value={emailCount || 0} />
+        <StatCard label="Professores" value={professorCount || 0} />
+        <StatCard label="Total de Aulas" value={classCount || 0} />
+        <StatCard label="Aulas Ativas" value={activeClassCount || 0} highlight />
+        <StatCard label="Slots Reservados" value={bookedCount || 0} />
+        <StatCard label="Slots Disponiveis" value={availableCount || 0} />
+      </div>
+
+      <h2 className="text-sm font-semibold text-muted mb-3">ACOES RAPIDAS</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Link href="/admin/emails" className="rounded-xl bg-card border border-border p-4 hover:border-primary/30 transition-colors">
+          <p className="font-semibold">Emails Autorizados</p>
+          <p className="text-xs text-muted mt-1">Adicionar/remover quem pode se cadastrar</p>
+        </Link>
+        <Link href="/admin/professors" className="rounded-xl bg-card border border-border p-4 hover:border-primary/30 transition-colors">
+          <p className="font-semibold">Professores</p>
+          <p className="text-xs text-muted mt-1">Editar perfis e excluir professores</p>
+        </Link>
+        <Link href="/admin/classes" className="rounded-xl bg-card border border-border p-4 hover:border-primary/30 transition-colors">
+          <p className="font-semibold">Todas as Aulas</p>
+          <p className="text-xs text-muted mt-1">Ativar/desativar/excluir aulas de qualquer professor</p>
+        </Link>
       </div>
     </div>
   );

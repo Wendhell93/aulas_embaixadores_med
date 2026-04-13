@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getCurrentUserRole, isAdmin } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+import DashboardNav from '@/components/DashboardNav';
 
 export default async function DashboardLayout({
   children,
@@ -24,71 +24,24 @@ export default async function DashboardLayout({
     .eq('user_id', user.id)
     .single();
 
-  return (
-    <div className="min-h-screen flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-card border-r border-border p-6 flex flex-col">
-        <Link href="/">
-          <Image
-            src="/logo.png"
-            alt="Med Review"
-            width={120}
-            height={120}
-            className="h-16 w-auto mb-6 mx-auto mix-blend-screen"
-          />
-        </Link>
-        <nav className="flex flex-col gap-1 flex-1">
-          <Link
-            href="/dashboard"
-            className="px-4 py-2.5 rounded-lg hover:bg-card-hover transition-colors text-sm font-medium"
-          >
-            Visao Geral
-          </Link>
-          <Link
-            href="/dashboard/profile"
-            className="px-4 py-2.5 rounded-lg hover:bg-card-hover transition-colors text-sm font-medium"
-          >
-            Meu Perfil
-          </Link>
-          {professor && (
-            <Link
-              href="/dashboard/classes"
-              className="px-4 py-2.5 rounded-lg hover:bg-card-hover transition-colors text-sm font-medium"
-            >
-              Minhas Aulas
-            </Link>
-          )}
-          {isAdmin(role) && (
-            <>
-              <div className="border-t border-border my-2" />
-              <Link
-                href="/admin"
-                className="px-4 py-2.5 rounded-lg hover:bg-card-hover transition-colors text-sm font-medium text-accent"
-              >
-                Painel Admin
-              </Link>
-            </>
-          )}
-        </nav>
-        <div className="border-t border-border pt-4 mt-4">
-          <p className="text-muted text-xs truncate mb-1">
-            {professor?.name || user.email}
-          </p>
-          {isAdmin(role) && (
-            <span className="inline-block text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full mb-2">
-              ADMIN
-            </span>
-          )}
-          <form action="/api/auth/logout" method="POST">
-            <button type="submit" className="text-danger text-sm hover:underline">
-              Sair
-            </button>
-          </form>
-        </div>
-      </aside>
+  const items = [
+    { href: '/dashboard', label: 'Visao Geral' },
+    { href: '/dashboard/profile', label: 'Meu Perfil' },
+    { href: '/dashboard/classes', label: 'Minhas Aulas', show: !!professor },
+    { href: '/dashboard/bookings', label: 'Aulas Marcadas', show: !!professor },
+    { href: '', label: '', divider: true, show: isAdmin(role) },
+    { href: '/admin', label: 'Painel Admin', show: isAdmin(role), accent: true },
+  ];
 
-      {/* Main content */}
-      <main className="flex-1 p-8">
+  return (
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      <DashboardNav
+        items={items}
+        userLabel={(professor as { name?: string } | null)?.name || user.email || ''}
+        adminBadge={isAdmin(role)}
+      />
+
+      <main className="flex-1 p-4 sm:p-6 lg:p-8">
         {!professor && (
           <div className="mb-6 rounded-lg bg-primary/10 border border-primary/30 p-4">
             <p className="text-sm">

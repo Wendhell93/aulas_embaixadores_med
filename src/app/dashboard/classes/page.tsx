@@ -3,11 +3,14 @@
 import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import type { Class } from '@/types/database';
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<Class | null>(null);
   const supabase = createClient();
 
   async function loadClasses() {
@@ -21,7 +24,6 @@ export default function ClassesPage() {
       .single();
 
     if (!professor) return;
-
     const professorId = (professor as { id: string }).id;
 
     const { data } = await supabase
@@ -38,17 +40,29 @@ export default function ClassesPage() {
     loadClasses();
   }, []);
 
-  async function toggleActive(classId: string, currentActive: boolean) {
-    await supabase
+  async function toggleActive(cls: Class) {
+    const { error } = await supabase
       .from('classes')
-      .update({ is_active: !currentActive })
-      .eq('id', classId);
+      .update({ is_active: !cls.is_active })
+      .eq('id', cls.id);
+
+    if (error) {
+      toast.error('Erro: ' + error.message);
+      return;
+    }
+    toast.success(`Aula ${!cls.is_active ? 'ativada' : 'desativada'}`);
     loadClasses();
   }
 
-  async function deleteClass(classId: string) {
-    if (!confirm('Tem certeza que deseja excluir esta aula?')) return;
-    await supabase.from('classes').delete().eq('id', classId);
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const { error } = await supabase.from('classes').delete().eq('id', deleteTarget.id);
+    if (error) {
+      toast.error('Erro: ' + error.message);
+      return;
+    }
+    toast.success('Aula excluida');
+    setDeleteTarget(null);
     loadClasses();
   }
 
@@ -60,7 +74,7 @@ export default function ClassesPage() {
         <h1 className="text-2xl font-bold">Minhas Aulas</h1>
         <Link
           href="/dashboard/classes/new"
-          className="rounded-lg bg-primary px-5 py-2.5 font-semibold text-white hover:bg-primary-hover transition-colors"
+          className="rounded-lg bg-gradient-to-r from-[#5B392D] to-[#D5A891] px-5 py-2.5 font-semibold text-white hover:opacity-90 transition-opacity text-sm"
         >
           + Nova Aula
         </Link>
@@ -72,49 +86,44 @@ export default function ClassesPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {classes.map((cls) => (
-            <div
-              key={cls.id}
-              className="rounded-xl bg-card border border-border p-4 flex items-center gap-4"
-            >
+          {classes.map(cls => (
+            <div key={cls.id} className="rounded-xl bg-card border border-border p-4 flex items-center gap-4">
               {cls.thumbnail_url && (
-                <img
-                  src={cls.thumbnail_url}
-                  alt={cls.grande_tema}
-                  className="w-16 h-16 rounded-lg object-cover"
-                />
+                <img src={cls.thumbnail_url} alt={cls.grande_tema} className="w-16 h-16 rounded-lg object-cover" />
               )}
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold truncate">{cls.grande_tema}</h3>
-                {cls.subtema && (
-                  <p className="text-muted text-sm truncate">{cls.subtema}</p>
-                )}
+                {cls.subtema && <p className="text-muted text-sm truncate">{cls.subtema}</p>}
                 <span
                   className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${
-                    cls.is_active
-                      ? 'bg-primary/20 text-primary'
-                      : 'bg-muted/20 text-muted'
+                    cls.is_active ? 'bg-primary/20 text-primary' : 'bg-muted/20 text-muted'
                   }`}
                 >
                   {cls.is_active ? 'Ativa' : 'Inativa'}
                 </span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
                 <button
-                  onClick={() => toggleActive(cls.id, cls.is_active)}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-border hover:bg-card-hover transition-colors"
+                  onClick={() => toggleActive(cls)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-card-hover transition-colors"
                 >
                   {cls.is_active ? 'Desativar' : 'Ativar'}
                 </button>
                 <Link
+                  href={`/dashboard/classes/${cls.id}/availability`}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-card-hover transition-colors text-center"
+                >
+                  Datas
+                </Link>
+                <Link
                   href={`/dashboard/classes/${cls.id}/edit`}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-border hover:bg-card-hover transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-card-hover transition-colors text-center"
                 >
                   Editar
                 </Link>
                 <button
-                  onClick={() => deleteClass(cls.id)}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-danger/30 text-danger hover:bg-danger/10 transition-colors"
+                  onClick={() => setDeleteTarget(cls)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-danger/30 text-danger hover:bg-danger/10 transition-colors"
                 >
                   Excluir
                 </button>
@@ -123,6 +132,16 @@ export default function ClassesPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Excluir aula?"
+        message={`Excluir "${deleteTarget?.grande_tema}"? Todos os horarios e disponibilidades serao perdidos.`}
+        confirmLabel="Excluir"
+        danger
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import type { ClassSlot } from '@/types/database';
 
 interface AvailableDatesModalProps {
@@ -69,16 +70,16 @@ export default function AvailableDatesModal({
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Erro ao reservar horario');
+        const msg = data.error || 'Erro ao reservar horario';
+        setError(msg);
+        toast.error(msg);
         setBooking(null);
-        // Remove da lista (alguem pegou primeiro)
         setSlots(prev => prev.filter(s => s.id !== slot.id));
         return;
       }
 
-      // Sucesso: chama callback do pai (abre WhatsApp)
+      toast.success('Horario reservado! Abrindo WhatsApp...');
       onSelectSlot?.(slot);
-      // Remove da lista local
       setSlots(prev => prev.filter(s => s.id !== slot.id));
     } catch {
       setError('Erro de conexao. Tente novamente.');

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Exo_2, Geist_Mono } from "next/font/google";
+import { Toaster } from 'sonner';
 import "./globals.css";
 
 const exo2 = Exo_2({
@@ -28,7 +29,20 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${exo2.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Toaster
+          theme="dark"
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#1a1a1a',
+              border: '1px solid #2a2a2a',
+              color: '#ededed',
+            },
+          }}
+        />
+      </body>
     </html>
   );
 }

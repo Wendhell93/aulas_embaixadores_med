@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import AvailableDatesModal from './AvailableDatesModal';
+import ProfessorAvatar from './ProfessorAvatar';
 import type { ClassWithProfessor, ClassSlot } from '@/types/database';
 
 interface ProfessorCardProps {
@@ -61,19 +62,11 @@ export default function ProfessorCard({ classData }: ProfessorCardProps) {
         {/* Professor info */}
         <div className="p-5 sm:p-4 flex-1 flex flex-col">
           <div className="flex items-start gap-3 mb-4">
-            {professor.photo_url ? (
-              <img
-                src={professor.photo_url}
-                alt={professor.name}
-                className="w-14 h-14 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-primary/30 flex-shrink-0"
-              />
-            ) : (
-              <div className="w-14 h-14 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-[#5B392D] to-[#D5A891] flex items-center justify-center flex-shrink-0">
-                <span className="text-xl sm:text-lg font-bold text-white">
-                  {professor.name.charAt(0)}
-                </span>
-              </div>
-            )}
+            <ProfessorAvatar
+              name={professor.name}
+              photoUrl={professor.photo_url}
+              size="md"
+            />
             <div className="min-w-0">
               <p className="text-xs font-semibold text-primary uppercase tracking-wider">
                 {professor.grande_area}
