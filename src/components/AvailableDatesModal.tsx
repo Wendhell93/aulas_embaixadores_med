@@ -78,7 +78,7 @@ export default function AvailableDatesModal({
         return;
       }
 
-      toast.success('Horario reservado! Abrindo WhatsApp...');
+      toast.success('Horario reservado! Abrindo formulario...');
       onSelectSlot?.(slot);
       setSlots(prev => prev.filter(s => s.id !== slot.id));
     } catch {

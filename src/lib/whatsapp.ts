@@ -1,6 +1,7 @@
-import { WHATSAPP_NUMBER } from './constants';
+// URL do formulario de marcacao de aula (substituiu o fluxo via WhatsApp)
+export const BOOKING_FORM_URL = 'https://wkf.ms/4tgzhQI';
 
-interface WhatsAppParams {
+interface BookingParams {
   professorName: string;
   grandeTema: string;
   subtema?: string;
@@ -8,17 +9,11 @@ interface WhatsAppParams {
   time?: string;
 }
 
-export function buildWhatsAppUrl(params: WhatsAppParams): string {
-  const { professorName, grandeTema, subtema, date, time } = params;
-
-  let message = `Olá! Gostaria de marcar uma aula de ${grandeTema}`;
-  if (subtema) {
-    message += ` - ${subtema}`;
-  }
-  message += ` com ${professorName}.`;
-  if (date && time) {
-    message += ` Data: ${date} às ${time}.`;
-  }
-
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+/**
+ * Retorna a URL do formulario de marcacao.
+ * Os parametros sao mantidos para compatibilidade, mas o formulario
+ * coleta as informacoes diretamente do aluno.
+ */
+export function buildWhatsAppUrl(_params: BookingParams): string {
+  return BOOKING_FORM_URL;
 }
